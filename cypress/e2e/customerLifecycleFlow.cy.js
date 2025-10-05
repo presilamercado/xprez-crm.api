@@ -1,7 +1,7 @@
 // http://localhost:8000/api/v1/docs#/api/v1/customers/
 
 describe('Customer Lifecycle', () => {
-  it('creates, retrieves, updates, and deletes a customer in one flow', () => {
+  it.only('creates, retrieves, updates, and deletes a customer in one flow', () => {
     const uniqueSuffix = Date.now();
     const customerPayload = {
       first_name: `flow-${uniqueSuffix}`,
