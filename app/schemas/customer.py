@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
 
 
 class CustomerBase(BaseModel):
-    first_name: str = Field(..., max_length=100)
-    last_name: str = Field(..., max_length=100)
     email: EmailStr
     phone: Optional[str] = Field(default=None, max_length=30)
     company_name: Optional[str] = Field(default=None, max_length=255)
@@ -25,8 +24,6 @@ class CustomerCreate(CustomerBase):
 class CustomerUpdate(BaseModel):
     """Payload schema for partially updating an existing customer."""
 
-    first_name: Optional[str] = Field(default=None, max_length=100)
-    last_name: Optional[str] = Field(default=None, max_length=100)
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(default=None, max_length=30)
     company_name: Optional[str] = Field(default=None, max_length=255)
@@ -37,7 +34,7 @@ class CustomerUpdate(BaseModel):
 class CustomerRead(CustomerBase):
     """Response schema representing a persisted customer."""
 
-    id: int
+    id: UUID
     created_at: datetime
     updated_at: datetime
 

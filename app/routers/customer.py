@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -22,7 +23,7 @@ class CustomerCRUD:
         statement = select(Customer).offset(skip).limit(limit)
         return self.session.scalars(statement).all()
 
-    def get(self, customer_id: int) -> Optional[Customer]:
+    def get(self, customer_id: UUID) -> Optional[Customer]:
         return self.session.get(Customer, customer_id)
 
     def create(self, payload: CustomerCreate) -> Customer:

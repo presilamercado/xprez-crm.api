@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -21,11 +22,17 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
 
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
+
     op.create_table(
         "customers",
-        sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
-        sa.Column("first_name", sa.String(length=100), nullable=False),
-        sa.Column("last_name", sa.String(length=100), nullable=False),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            nullable=False,
+            server_default=sa.text("uuid_generate_v4()"),
+        ),
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("phone", sa.String(length=30), nullable=True),
         sa.Column("company_name", sa.String(length=255), nullable=True),

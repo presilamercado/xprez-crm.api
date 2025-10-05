@@ -68,6 +68,10 @@ alembic downgrade -1
 
 The Alembic environment pulls the database URL from `app.core.config.settings`, so ensure your `.env` is configured before running these commands.
 
+> **Note**
+> The initial migration enables the PostgreSQL `uuid-ossp` extension so that UUID primary keys can use the `uuid_generate_v4()` function. Make sure your database role is permitted to create extensions, or create it manually beforehand.
+> After updating to the UUID-based identifiers, run `alembic upgrade head` on existing databases to migrate integer IDs to UUIDs automatically.
+
 ## Tests
 
 Run the test suite with:
@@ -79,9 +83,9 @@ pytest
 ## Project Structure
 
 - `app/` – FastAPI application modules (API routers, config, schemas, models, data helpers)
+- `app/models/contact.py` – Contact ORM model linked to customers
+- `app/api/v1/contacts.py` – Contacts API endpoints and CRUD wiring
 - `tests/` – Automated tests
 - `pyproject.toml` – Project metadata and dependencies
 
 Extend the `app/` package with additional routers, models, and services as your CRM feature set evolves.
-
-

@@ -1,5 +1,7 @@
 """Customer API endpoints."""
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -12,7 +14,7 @@ from app.schemas import CustomerCreate, CustomerRead, CustomerUpdate
 router = APIRouter(prefix="/customers", tags=["Customers"])
 
 
-def _get_customer_or_404(session: Session, customer_id: int) -> Customer:
+def _get_customer_or_404(session: Session, customer_id: UUID) -> Customer:
     customer = CustomerCRUD(session).get(customer_id)
     if not customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
@@ -33,7 +35,7 @@ def list_customers(
 @router.get("/{customer_id}", response_model=CustomerRead)
 def retrieve_customer(
     *,
-    customer_id: int,
+    customer_id: UUID,
     session: Session = Depends(get_session),
 ) -> CustomerRead:
     customer = _get_customer_or_404(session, customer_id)
@@ -62,7 +64,7 @@ def create_customer(
 @router.put("/{customer_id}", response_model=CustomerRead)
 def update_customer(
     *,
-    customer_id: int,
+    customer_id: UUID,
     payload: CustomerUpdate,
     session: Session = Depends(get_session),
 ) -> CustomerRead:
@@ -83,7 +85,7 @@ def update_customer(
 @router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer(
     *,
-    customer_id: int,
+    customer_id: UUID,
     session: Session = Depends(get_session),
 ) -> None:
     customer = _get_customer_or_404(session, customer_id)

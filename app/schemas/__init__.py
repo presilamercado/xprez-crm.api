@@ -1,5 +1,11 @@
 """Pydantic schemas exposed for API usage."""
 
+from app.schemas.contact import (
+    ContactBase,
+    ContactCreate,
+    ContactRead,
+    ContactUpdate,
+)
 from app.schemas.customer import (
     CustomerBase,
     CustomerCreate,
@@ -8,6 +14,10 @@ from app.schemas.customer import (
 )
 
 __all__ = [
+    "ContactBase",
+    "ContactCreate",
+    "ContactRead",
+    "ContactUpdate",
     "CustomerBase",
     "CustomerCreate",
     "CustomerRead",
