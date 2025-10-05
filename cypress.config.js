@@ -1,65 +1,70 @@
-
-// const { defineConfig } = require("cypress");
-
-// module.exports = defineConfig({
-//   e2e: {
-//     baseUrl: "http://127.0.0.1:8000", 
-//     fixturesFolder: "app/cypress/e2e/fixtures",
-//     supportFile: "app/cypress/e2e/fixtures/support/e2e.js",
-//     specPattern: "app/cypress/e2e/**/*.cy.js",
-//     setupNodeEvents(on, config) {
-//       // implement node event listeners here
-//     },
-//   },
-// });
-
+const path = require("path");
+const fs = require("fs");
+const { spawnSync } = require("child_process");
 const { defineConfig } = require("cypress");
-//const JWT = require("./cypress/support/jwt");
-//const { ClientCredentialsService } = require("@vygr-npm/cypress-testing-utilities");
+
+function resolvePythonBinary() {
+  const scriptPath = path.join(__dirname, "scripts", "seed_customer.py");
+  const explicitBinary = process.env.PYTHON;
+  if (explicitBinary) {
+    return { pythonExecutable: explicitBinary, scriptPath };
+  }
+
+  const venvPython = path.join(__dirname, ".venv", "bin", "python");
+  if (fs.existsSync(venvPython)) {
+    return { pythonExecutable: venvPython, scriptPath };
+  }
+
+  return { pythonExecutable: "python3", scriptPath };
+}
+
+function runSeedScript(customerPayload) {
+  const { pythonExecutable, scriptPath } = resolvePythonBinary();
+  const payloadArg = JSON.stringify(customerPayload);
+  const spawnOptions = {
+    cwd: __dirname,
+    env: { ...process.env, PYTHONPATH: __dirname },
+    encoding: "utf-8",
+  };
+
+  let result = spawnSync(pythonExecutable, [scriptPath, payloadArg], spawnOptions);
+
+  if (result.error && result.error.code === "ENOENT" && pythonExecutable !== "python") {
+    result = spawnSync("python", [scriptPath, payloadArg], spawnOptions);
+  }
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (result.status !== 0) {
+    const stderr = (result.stderr || "").trim();
+    throw new Error(stderr || `Database seed script exited with code ${result.status}`);
+  }
+
+  const stdout = (result.stdout || "").trim();
+  if (!stdout) {
+    throw new Error("Database seed script returned no output");
+  }
+
+  try {
+    return JSON.parse(stdout);
+  } catch (error) {
+    throw new Error(`Unable to parse seed script output: ${stdout}`);
+  }
+}
 
 module.exports = defineConfig({
   e2e: {
     baseUrl: "http://127.0.0.1:8000",
-    supportFile: "cypress/fixtures/support/e2e.js",
-
-    // viewportWidth: 1920,
-    // viewportHeight: 1080,
-    // pageLoadTimeout: 30000,
-    // //projectId: "oqwgrf",
-    // experimentalMemoryManagement: true,
-    // experimentalRunAllSpecs: true,
-    // experimentalStudio: true,
-    // retries: {
-    //   runMode: 2,
-    //   openMode: 0,
-    // },
     setupNodeEvents(on, config) {
       config.baseUrl = config.env["BASE_URL"] || config.baseUrl;
 
-      //on("task", JWT(config));
-      // on("task", {
-      //   getAuthResult() {
-      //     const params = {
-      //       configuration: {
-      //         auth: {
-      //           clientId: config.env["VOICE_SERVICE_ENGINE_CLIENT_ID"],
-      //           authority: config.env["VOICE_SERVICE_ENGINE_AUTHORITY"],
-      //           clientSecret: config.env["VOICE_SERVICE_ENGINE_CLIENT_SECRET"],
-      //         },
-      //       },
-      //       scope: config.env["VOICE_SERVICE_ENGINE_SCOPE"],
-      //     };
-
-      // return new Promise((resolve, reject) => {
-      //   ClientCredentialsService.getInstance(params)
-      //     .authenticate()
-      //     .then((result) => resolve(result))
-      //     .catch((error) => reject(error));
-      // });
-      // },
-      // });
+      on("task", {
+        "db:insertCustomer": (customerPayload) => runSeedScript(customerPayload),
+      });
 
       return config;
     },
-  }
+  },
 });
