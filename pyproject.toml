@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xprezideas-crm-api"
+version = "0.1.0"
+description = "FastAPI backend service for the xPrez CRM"
+readme = "README.md"
+authors = [{ name = "xPrezideas", email = "support@xprezideas.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0,<1.0.0",
+    "uvicorn[standard]>=0.29.0,<1.0.0",
+    "pydantic-settings>=2.2.1,<3.0.0",
+    "python-multipart>=0.0.6",
+    "sqlalchemy>=2.0,<3.0",
+    "psycopg[binary]>=3.2,<4.0",
+    "alembic>=1.13,<2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "httpx>=0.27",
+    "ruff>=0.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
