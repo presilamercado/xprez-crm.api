@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "@bahmutov/cy-api": "^2.2.8",
+    "cypress": "^14.0.0"
+  },
+  "scripts": {
+    "e2e": "cypress run",
+    "cypress": "cypress open"
+  }
+}
