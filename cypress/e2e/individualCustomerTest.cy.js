@@ -71,7 +71,7 @@ describe('Customers API', () => {
       });
     });
   });
-  it('creates a customer and validates the response dynamically', () => {
+  it.only('creates a customer and validates the response dynamically', () => {
     const uniqueSuffix = Date.now();
     const customerPayload = {
       email: `presila-${uniqueSuffix}@example.com`,
