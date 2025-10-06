@@ -1,0 +1,51 @@
+script:pre-request {
+  const axios = require('axios');
+  
+  /****************************************
+   **Functions called in all Pre Requests**
+   ****************************************/
+  
+  async function postCustomer(testData){
+    const apiUrl=bru.getEnvVar('BASE_URL')
+    try {
+      const response = await axios.post(apiUrl + '/api/v1/customers/', testData,
+        headerDefault);
+        return response;
+    } catch (error) {
+      console.error('Error on POST Customer:', error.message);
+      throw error;
+    }
+  }
+
+  async function updateCustomer(customerId, testData){
+    const apiUrl=bru.getEnvVar('BASE_URL')
+    try {
+      const response = await axios.put(apiUrl + `/api/v1/customers/${customerId}`, testData,
+        headerDefault);
+        return response;
+    } catch (error) {
+      console.error('Error on PUT Customer:', error.message);
+      throw error;
+    }
+  }
+
+  async function deleteCustomer(customerId){
+    const apiUrl=bru.getEnvVar('BASE_URL')
+    try {
+      const response = await axios.delete(apiUrl + `/api/v1/customers/${customerId}`,
+        headerDefault);
+        return response;
+    } catch (error) {
+      console.error('Error on DELETE Customer:', error.message);
+      throw error;
+    }
+  }
+  
+  
+  const headerDefault = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+  
+}

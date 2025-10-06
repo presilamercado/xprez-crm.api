@@ -1,0 +1,49 @@
+meta {
+  name: Get Customer
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/{{customerID}}
+  body: none
+  auth: none
+}
+
+script:pre-request {
+  let customerid;
+  
+  // Generate unique email to avoid conflicts
+  const timestamp = Date.now();
+  let preTestData = {
+      "email": `presila.customer.${timestamp}@example.com`,
+      "phone": "0279603144",
+      "companyName": "PresilaElla",
+      "notes": "Insert new table in database",
+      "isActive": false
+      };
+  
+  try {
+    const response = await postCustomer(preTestData);
+    
+    if (response && response.data && response.data.id) {
+      bru.setVar('customerID', response.data.id);
+      bru.setVar('preTestData', preTestData);
+      console.log('Created customer with ID:', response.data.id);
+    } else {
+      console.error('Invalid response structure:', response);
+      throw new Error('Failed to create customer: Invalid response structure');
+    }
+  } catch (error) {
+    console.error('Error creating customer:', error.message);
+    throw error;
+  }
+}
+
+script:post-response {
+  const customerId = bru.getVar("customerID");
+}
+
+settings {
+  encodeUrl: true
+}
