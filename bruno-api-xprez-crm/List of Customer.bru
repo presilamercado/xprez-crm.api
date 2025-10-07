@@ -1,0 +1,101 @@
+meta {
+  name: List of Customer
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  test('returns expected customers (excluding timestamps)', () => {
+    const status = res.status;
+    const data = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(Array.isArray(data), 'response is array').to.eq(true);
+  
+    const expectedCustomers = [
+      {
+        email: 'presila-1759656940871@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+      {
+        email: 'presila-1759657063981@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+      {
+        email: 'presila-1759657178019@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+    ];
+  
+    expectedCustomers.forEach((expected) => {
+      const match = data.find((customer) => customer.email === expected.email);
+      expect(match, `customer ${expected.email} present`).to.not.be.undefined;
+  
+      Object.entries(expected).forEach(([key, value]) => {
+        expect(match[key], `${expected.email} ${key}`).to.eq(value);
+      });
+    });
+  });
+}
+
+tests {
+  test('returns expected customers (excluding timestamps)', () => {
+    const status = res.status;
+    const data = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(Array.isArray(data), 'response is array').to.eq(true);
+  
+    const expectedCustomers = [
+      {
+        email: 'presila-1759656940871@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+      {
+        email: 'presila-1759657063981@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+      {
+        email: 'presila-1759657178019@example.com',
+        phone: '0279603144',
+        company_name: 'valdezCompany',
+        notes: 'cypress test',
+        is_active: true,
+      },
+    ];
+  
+    expectedCustomers.forEach((expected) => {
+      const match = data.find((customer) => customer.email === expected.email);
+      expect(match, `customer ${expected.email} present`).to.not.be.undefined;
+  
+      Object.entries(expected).forEach(([key, value]) => {
+        expect(match[key], `${expected.email} ${key}`).to.eq(value);
+      });
+    });
+  });
+}

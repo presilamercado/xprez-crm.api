@@ -1,0 +1,81 @@
+meta {
+  name: Get Customer
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/{{customerID}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:pre-request {
+  let customerid;
+  
+  // Generate unique email to avoid conflicts
+  const timestamp = Date.now();
+  const preTestData = {
+      email: `presila.customer.${timestamp}@example.com`,
+      phone: "0279603144",
+      company_name: "PresilaElla",
+      notes: "Insert new table in database",
+      is_active: false
+      };
+  
+  try {
+    const response = await postCustomer(preTestData);
+    
+    if (response && response.data && response.data.id) {
+      bru.setVar('customerID', response.data.id);
+      bru.setVar('preTestData', preTestData);
+      console.log('Created customer with ID:', response.data.id);
+    } else {
+      console.error('Invalid response structure:', response);
+      throw new Error('Failed to create customer: Invalid response structure');
+    }
+  } catch (error) {
+    console.error('Error creating customer:', error.message);
+    throw error;
+  }
+}
+
+script:post-response {
+  const customerID = bru.getVar("customerID");
+  const seed = bru.getVar('preTestData');
+  
+  test('returns the seeded customer payload', () => {
+    const status = res.status;
+    const body = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(body.id, 'id matches seeded record').to.eq(customerID);
+    expect(body.email, 'email').to.eq(seed.email);
+    expect(body.phone, 'phone').to.eq(seed.phone);
+    expect(body.company_name, 'company_name').to.eq(seed.company_name);
+    expect(body.notes, 'notes').to.eq(seed.notes);
+    expect(body.is_active, 'is_active').to.eq(seed.is_active);
+  });
+}
+
+tests {
+  const customerID = bru.getVar("customerID");
+  const seed = bru.getVar('preTestData');
+  
+  test('returns the seeded customer payload', () => {
+    const status = res.status;
+    const body = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(body.id, 'id matches seeded record').to.eq(customerID);
+    expect(body.email, 'email').to.eq(seed.email);
+    expect(body.phone, 'phone').to.eq(seed.phone);
+    expect(body.company_name, 'company_name').to.eq(seed.company_name);
+    expect(body.notes, 'notes').to.eq(seed.notes);
+    expect(body.is_active, 'is_active').to.eq(seed.is_active);
+  });
+}

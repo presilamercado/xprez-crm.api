@@ -1,0 +1,118 @@
+meta {
+  name: Update Customer
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{BASE_URL}}/api/v1/customers/{{customerID}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{updatedEmail}}",
+    "phone": "{{updatedPhone}}",
+    "company_name": "{{updatedCompanyName}}",
+    "notes": "{{updatedNotes}}",
+    "is_active": {{updatedIsActive}}
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:pre-request {
+  // First create a customer to update
+  const timestamp = Date.now();
+  const initialData = {
+    email: `initial.customer.${timestamp}@example.com`,
+    phone: "0279603144",
+    company_name: "Initial Company",
+    notes: "Initial notes",
+    is_active: true
+  };
+  
+  try {
+    // Create initial customer
+    const createResponse = await postCustomer(initialData);
+    
+    if (createResponse && createResponse.data && createResponse.data.id) {
+      const customerId = createResponse.data.id;
+      bru.setVar('customerID', customerId);
+      
+      // Set updated data
+      const updatedData = {
+        email: `updated.customer.${timestamp}@example.com`,
+        phone: "0279603999",
+        company_name: "Updated Company Name",
+        notes: "Updated notes for customer",
+        is_active: false
+      };
+      
+      // Set variables for the request body
+      bru.setVar('updatedEmail', updatedData.email);
+      bru.setVar('updatedPhone', updatedData.phone);
+      bru.setVar('updatedCompanyName', updatedData.company_name);
+      bru.setVar('updatedNotes', updatedData.notes);
+      bru.setVar('updatedIsActive', updatedData.is_active);
+      
+      console.log('Created customer with ID:', customerId);
+      console.log('Will update with:', updatedData);
+      
+    } else {
+      throw new Error('Failed to create initial customer');
+    }
+  } catch (error) {
+    console.error('Error in pre-request:', error.message);
+    throw error;
+  }
+}
+
+script:post-response {
+  const customerId = bru.getVar('customerID');
+  const expected = {
+    email: bru.getVar('updatedEmail'),
+    phone: bru.getVar('updatedPhone'),
+    company_name: bru.getVar('updatedCompanyName'),
+    notes: bru.getVar('updatedNotes'),
+    is_active: bru.getVar('updatedIsActive'),
+  };
+  
+  test('updates seeded customer with new payload', () => {
+    const status = res.status;
+    const body = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(body.id, 'id matches seeded record').to.eq(customerId);
+  
+    Object.entries(expected).forEach(([key, value]) => {
+      expect(body[key], `updated ${key}`).to.eq(value);
+    });
+  });
+}
+
+tests {
+  const customerId = bru.getVar('customerID');
+  const expected = {
+    email: bru.getVar('updatedEmail'),
+    phone: bru.getVar('updatedPhone'),
+    company_name: bru.getVar('updatedCompanyName'),
+    notes: bru.getVar('updatedNotes'),
+    is_active: bru.getVar('updatedIsActive'),
+  };
+  
+  test('updates seeded customer with new payload', () => {
+    const status = res.status;
+    const body = res.getBody();
+  
+    expect(status, 'status').to.eq(200);
+    expect(body.id, 'id matches seeded record').to.eq(customerId);
+  
+    Object.entries(expected).forEach(([key, value]) => {
+      expect(body[key], `updated ${key}`).to.eq(value);
+    });
+  });
+}

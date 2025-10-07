@@ -1,0 +1,36 @@
+meta {
+  name: GET CUSTOMER without script
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/d0d09dd3-5ab5-44f9-9e00-2f89510d9c4a
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("Get Customer", () => {
+    const data = res.getBody();
+  
+    expect(data.email).to.equal("premercado@gmail.com");
+    expect(data.phone).to.equal("0279603144");
+    expect(data.company_name).to.equal('PresilaElla')
+    expect(data.notes).to.equal("Insert new table in database");
+    expect(data.is_active).to.be.false;
+      expect(data.id).to.match(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(data.created_at).to.match(/^\d{4}-\d{2}-\d{2}T/);
+    expect(data.updated_at).to.match(/^\d{4}-\d{2}-\d{2}T/);
+    // Optional: ensure created and updated timestamps are identical
+    expect(data.created_at).to.equal(data.updated_at);
+  
+  });
+  
+}

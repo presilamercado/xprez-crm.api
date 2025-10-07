@@ -1,0 +1,38 @@
+meta {
+  name: Create CUSTOMER without script
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{BASE_URL}}/api/v1/customers/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+      "email": "presilamercado123@gmail.com",
+      "phone": "0279603144",
+      "company_name": "PresilaElla",
+      "notes": "Insert new table in database",
+      "is_active": false
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("Get Customer", () => {
+    const data = res.getBody();
+  
+    expect(data.email).to.equal("presilamercado123@gmail.com");
+    expect(data.phone).to.equal("0279603144");
+    expect(data.company_name).to.equal("PresilaElla");
+    expect(data.notes).to.equal("Insert new table in database");
+    expect(data.is_active).to.be.false;
+  });
+  
+}

@@ -1,7 +1,7 @@
 meta {
   name: Delete Customer
   type: http
-  seq: 4
+  seq: 5
 }
 
 delete {
@@ -10,15 +10,19 @@ delete {
   auth: none
 }
 
+assert {
+  res.status: eq 204
+}
+
 script:pre-request {
   // First create a customer to delete
   const timestamp = Date.now();
-  let customerData = {
-    "email": `delete.customer.${timestamp}@example.com`,
-    "phone": "0279603144",
-    "companyName": "Company To Delete",
-    "notes": "This customer will be deleted",
-    "isActive": true
+  const customerData = {
+    email: `delete.customer.${timestamp}@example.com`,
+    phone: "0279603144",
+    company_name: "Company To Delete",
+    notes: "This customer will be deleted",
+    is_active: true
   };
   
   try {
@@ -46,16 +50,27 @@ script:post-response {
   const customerId = bru.getVar('customerID');
   
   if (status === 204) {
-    console.log('✅ Customer deleted successfully with ID:', customerId);
-    
+    console.log('Customer deleted successfully with ID:', customerId);
+  
     // Optional: Try to get the deleted customer to verify it's gone
     // This would return 404 if deletion was successful
-    
+  
   } else {
-    console.error('❌ Delete failed with status:', status);
+    console.error('Delete failed with status:', status);
   }
 }
 
-settings {
-  encodeUrl: true
+tests {
+  const { status } = res;
+  const customerId = bru.getVar('customerID');
+  
+  if (status === 204) {
+    console.log('Customer deleted successfully with ID:', customerId);
+  
+    // Optional: Try to get the deleted customer to verify it's gone
+    // This would return 404 if deletion was successful
+  
+  } else {
+    console.error('Delete failed with status:', status);
+  }
 }

@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "crm",
+  "name": "crm2",
   "type": "collection",
   "ignore": [
     "node_modules",

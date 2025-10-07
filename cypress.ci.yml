@@ -1,0 +1,88 @@
+name: Cypress CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  NODE_ENV: test
+  CYPRESS_BASE_URL: http://127.0.0.1:8000
+  PYTHON_VERSION: '3.10'
+  NPM_CACHE_DIR: ~/.npm
+
+jobs:
+  cypress-e2e:
+    runs-on: ubuntu-latest
+
+    container:
+      image: cypress/included:13.7.1
+      options: --user 0:0
+
+    env:
+      BASE_URL: ${{ env.CYPRESS_BASE_URL }}
+      PYTHON: .venv/bin/python
+      PIP_CACHE_DIR: ~/.cache/pip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.NPM_CACHE_DIR }}
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Restore pip cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          restore-keys: pip-
+
+      - name: Install system packages
+        run: |
+          apt-get update
+          apt-get install -y python3 python3-venv python3-dev build-essential netcat-openbsd
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Set up Python virtualenv
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: Install node dependencies
+        run: npm ci
+
+      - name: Start API (background)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          . .venv/bin/activate
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          API_PID=$!
+          echo $API_PID > api.pid
+
+      - name: Wait for API to be up
+        run: npx wait-on --timeout 60000 ${{ env.CYPRESS_BASE_URL }}
+
+      - name: Cypress run
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+        run: |
+          npx cypress run --browser chrome
+
+      - name: Stop API process
+        if: always()
+        run: |
+          if [ -f api.pid ]; then
+            kill $(cat api.pid) || true
+          fi
