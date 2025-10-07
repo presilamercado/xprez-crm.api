@@ -1,17 +1,30 @@
 {
     "createNewCustomer": {
-        "email": "presila.mercado@gmail.com",
-        "phone": "0279603144",
-        "companyName": "PresilaElla",
-        "notes": "Insert new table in database",
-        "isActive": true   
-    },
-    "updateCustomer": {
-        "email": "presila.mercado@gmail.com",
+        "email": "presila.mercado",
         "phone": "0279603144",
         "companyName": "PresilaElla",
         "notes": "Insert new table in database",
         "isActive": true
+    },
+    "updateCustomer": {
+        "email": "presila.mercado",
+        "phone": "0279603144",
+        "companyName": "PresilaEllaUpdate",
+        "notes": "Insert new table in database",
+        "isActive": true
+    },
+    "addNewCustomer": {
+        "email": "presila.mercado",
+        "phone": "0279603144",
+        "companyName": "PresilaElla",
+        "notes": "Insert new table in database",
+        "isActive": true
+    },
+     "updateNewCustomer": {
+        "email": "presila.mercadoUpdate",
+        "phone": "0279603100",
+        "companyName": "PresilaEllaUpdate",
+        "notes": "Insert new table in database update",
+        "isActive": false
     }
 }
-

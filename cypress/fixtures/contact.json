@@ -1,0 +1,36 @@
+{
+    "createNewContact": {
+        "first_name": "Presila",
+        "last_name": "Valdez",
+        "role_title": "tester",
+        "email": "presila@example.com",
+        "phone_mobile": "0279603144",
+        "phone_work": "0279603155",
+        "is_primary": true,
+        "customer_id": "192199ed-3f6a-4873-87ad-59e35c8d14be"
+    },
+    "updateContact": {
+        "first_name": "PresilaUpdate",
+        "last_name": "ValdezUpdate",
+        "role_title": "testerUpdate",
+        "email": "presilaUpdate@example.com",
+        "phone_mobile": "0279603144",
+        "phone_work": "0279603155",
+        "is_primary": true,
+        "customer_id": "192199ed-3f6a-4873-87ad-59e35c8d14be"
+    },
+    "addNewContact": {
+        "email": "presila.mercado",
+        "phone": "0279603144",
+        "companyName": "PresilaElla",
+        "notes": "Insert new table in database",
+        "isActive": true
+    },
+    "updateNewContact": {
+        "email": "presila.mercadoUpdate",
+        "phone": "0279603100",
+        "companyName": "PresilaEllaUpdate",
+        "notes": "Insert new table in database update",
+        "isActive": false
+    }
+}

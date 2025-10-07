@@ -1,9 +1,7 @@
 {
   "dependencies": {
     "@bahmutov/cy-api": "^2.2.6",
-    "@faker-js/faker": "^9.0.0",
-    "cypress": "^14.0.0",
-    "cypress-fixture-faker": "^1.0.4"
+    "cypress": "^14.0.0"
   },
   "scripts": {
     "e2e": "cypress run",

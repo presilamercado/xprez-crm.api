@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from typing import Any
+from uuid import UUID
 
 try:  # pragma: no cover - defensive import handling
     from sqlalchemy.exc import SQLAlchemyError
@@ -24,8 +25,6 @@ def _serialize_customer(customer: Customer) -> dict[str, Any]:
 
     return {
         "id": customer.id,
-        "first_name": customer.first_name,
-        "last_name": customer.last_name,
         "email": customer.email,
         "phone": customer.phone,
         "company_name": customer.company_name,
@@ -51,7 +50,12 @@ def main(raw_payload: str) -> None:
     finally:
         session.close()
 
-    print(json.dumps(_serialize_customer(customer)))
+    def _default(obj: Any) -> str:
+        if isinstance(obj, UUID):
+            return str(obj)
+        raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+    print(json.dumps(_serialize_customer(customer), default=_default))
 
 
 if __name__ == "__main__":

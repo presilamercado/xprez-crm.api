@@ -20,10 +20,8 @@ describe('addCustomerDB command', () => {
       cy
         .addCustomerDB('customers', customerFixture)
         .then((insertedCustomer) => {
-          expect(insertedCustomer).to.have.property('id').that.is.a('number');
+          expect(insertedCustomer).to.have.property('id').that.is.a('string');
           expect(insertedCustomer.email).to.include('@');
-          expect(insertedCustomer.first_name).to.not.be.empty;
-
           createdCustomerId = insertedCustomer.id;
           return insertedCustomer.id;
         })

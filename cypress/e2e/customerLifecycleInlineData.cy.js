@@ -1,26 +1,24 @@
+// No fixtures here: this spec seeds its own request data and runs a full create→get→update→delete lifecycle.
 // http://localhost:8000/api/v1/docs#/api/v1/customers/
 
 describe('Customer Lifecycle', () => {
-  it.only('creates, retrieves, updates, and deletes a customer in one flow', () => {
+  it('creates, retrieves, updates, and deletes a customer in one flow', () => {
     const uniqueSuffix = Date.now();
     const customerPayload = {
-      first_name: `flow-${uniqueSuffix}`,
-      last_name: 'Tester',
-      email: `flow-${uniqueSuffix}@example.com`,
+      email: `presila-${uniqueSuffix}@example.com`,
       phone: '0279603144',
       company_name: 'LifecycleCo',
       notes: 'end-to-end flow',
       is_active: true,
     };
 
+    // clone the creation payload, then override key fields to drive the update step
     const updatedPayload = {
-      ...customerPayload,
-      first_name: `updated-${uniqueSuffix}`,
-      last_name: 'TesterUpdated',
-      email: `flow-${uniqueSuffix}-updated@example.com`,
-      phone: '0279603146',
-      company_name: 'LifecycleCoUpdated',
-      notes: 'end-to-end flow updated',
+        ...customerPayload,
+        email: `presilaUpdate-${uniqueSuffix}-updated@example.com`,
+        phone: '0279603146',
+        company_name: 'LifecycleCoUpdated',
+        notes: 'end-to-end flow updated',
       is_active: true,
     };
 
@@ -34,7 +32,7 @@ describe('Customer Lifecycle', () => {
       .then((response) => {
         expect(response.status).to.eq(201);
         expect(response.body).to.include(customerPayload);
-        expect(response.body).to.have.property('id').that.is.a('number');
+        expect(response.body).to.have.property('id').that.is.a('string');
         customerId = response.body.id;
       })
       .then(() =>

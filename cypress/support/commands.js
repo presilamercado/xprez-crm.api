@@ -30,26 +30,27 @@
  * @param {number|string} identifier - Customer id or email address.
  * @returns {Cypress.Chainable<object>} Resolves with the customer payload.
  */
-// Cypress.Commands.add('getCustomerID', (identifier) => {
-//   if (identifier === undefined || identifier === null) {
-//     throw new Error('getCustomerID requires an id or email argument');
-//   }
+Cypress.Commands.add('getCustomerID', (identifier) => {
+  if (identifier === undefined || identifier === null) {
+    throw new Error('getCustomerID requires an id or email argument');
+  }
 
-//   const numericId = Number(identifier);
+  const numericId = Number(identifier);
 
-//   if (!Number.isNaN(numericId)) {
-//     return cy
-//       .api({
-//         url: `/api/v1/customers/${numericId}`,
-//         method: 'GET',
-//       })
-//       .then((response) => {
-//         expect(response.status, `customer ${numericId} status`).to.eq(200);
-//         expect(response.body).to.include.keys(['id', 'email', 'first_name', 'last_name']);
-//         expect(response.body.id).to.eq(numericId);
-//         return response.body;
-//       });
-//   }
+  if (!Number.isNaN(numericId)) {
+    return cy
+      .api({
+        url: `/api/v1/customers/${numericId}`,
+        method: 'GET',
+      })
+      .then((response) => {
+        expect(response.status, `customer ${numericId} status`).to.eq(200);
+        expect(response.body).to.include.keys(['id', 'email']);
+        expect(response.body.id).to.eq(numericId);
+        return response.body;
+      });
+  }
+})
 
 //   const email = String(identifier);
 //   return cy
