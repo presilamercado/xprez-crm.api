@@ -67,7 +67,7 @@ module.exports = defineConfig({
     defaultCommandTimeout: 10000,
     requestTimeout: 15000,
     responseTimeout: 30000,
-    projectId: "wvswqk",
+    projectId: "dwcdor",
     retries: {
       runMode: 1,
       openMode: 0,
@@ -83,7 +83,6 @@ module.exports = defineConfig({
 });
 
 
-// npx cypress run --record --key 539fe50c-aedc-48d3-8725-b5a4b87be809
-
-// CYPRESS_RECORD_KEY : 539fe50c-aedc-48d3-8725-b5a4b87be809
+// npx cypress run --record --key f5c58b49-d878-46c1-b6ef-229c534d03b0
+// CYPRESS_RECORD_KEY : f5c58b49-d878-46c1-b6ef-229c534d03b0
 
