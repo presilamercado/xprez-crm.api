@@ -9,8 +9,9 @@ on:
 
 env:
   NODE_ENV: test
-  # Set both: Cypress reads the camelCase one; curl uses the ALLCAPS one.
+  # Cypress reads this; tests can use cy.visit('/')
   CYPRESS_baseUrl: http://127.0.0.1:8000
+  # We also keep this for shell use (curl)
   CYPRESS_BASE_URL: http://127.0.0.1:8000
   NPM_CACHE_DIR: ~/.npm
 
@@ -18,7 +19,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# make all run steps use bash (so `set -euxo pipefail` works)
 defaults:
   run:
     shell: bash
@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y build-essential libpq-dev netcat-openbsd
+          sudo apt-get install -y build-essential libpq-dev netcat-openbsd curl
           sudo rm -rf /var/lib/apt/lists/*
 
       - name: Install Python dependencies
@@ -82,20 +82,29 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           set -euxo pipefail
+          # app lives in app/main.py and exposes "app"
           python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           echo $! > api.pid
 
-      - name: Wait for API to be up
+      - name: Wait for API port
         run: |
           set -euxo pipefail
-          for i in {1..30}; do
-            if curl --silent --fail "$CYPRESS_BASE_URL/api/v1/customers/" >/dev/null; then
+          # wait up to ~120s for TCP port 8000 to open
+          for i in {1..120}; do
+            if nc -z 127.0.0.1 8000; then
+              echo "Port 8000 is open"
               exit 0
             fi
-            sleep 2
+            sleep 1
           done
-          echo "API did not start in time" >&2
+          echo "Port 8000 did not open in time" >&2
           exit 1
+
+      - name: Health check (FastAPI docs)
+        run: |
+          set -euxo pipefail
+          # /docs returns 200 if FastAPI app is live (assuming docs not disabled)
+          curl --silent --fail "$CYPRESS_BASE_URL/docs" >/dev/null
 
       - name: Run Cypress tests
         env:
@@ -106,7 +115,6 @@ jobs:
           if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then
             EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"
           fi
-          # add --browser chrome --headless if you prefer
           npx cypress run $EXTRA_ARGS
 
       - name: Upload screenshots (on failure)
