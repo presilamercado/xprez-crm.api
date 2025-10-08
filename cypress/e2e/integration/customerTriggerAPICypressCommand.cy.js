@@ -7,7 +7,7 @@ describe('Customers API', () => {
             customerFixtures = data;
         });
     });
-    it.only('creates, fetches, updates, and revalidates a customer dynamically', () => {
+    it('creates, fetches, updates, and revalidates a customer dynamically', () => {
         const uniqueSuffix = Date.now();
         const createSeed = customerFixtures.addNewCustomer;
         const baseUrl = '/api/v1/customers/';
