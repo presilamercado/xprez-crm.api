@@ -5,12 +5,12 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ '*' ]
-  # optional: lets you run manually from GitHub Actions tab
   workflow_dispatch:
 
 env:
   NODE_ENV: test
-  CYPRESS_BASE_URL: http://127.0.0.1:8000
+  # define base URL directly here (no need to reuse env vars)
+  CYPRESS_baseUrl: http://127.0.0.1:8000
   NPM_CACHE_DIR: ~/.npm
 
 concurrency:
@@ -26,8 +26,6 @@ jobs:
       options: --user 0:0
 
     env:
-      # ✅ Cypress expects this camelCase variable name
-      CYPRESS_baseUrl: ${{ env.CYPRESS_BASE_URL }}
       PYTHON: .venv/bin/python
       PIP_CACHE_DIR: ~/.cache/pip
 
@@ -83,8 +81,8 @@ jobs:
           echo $! > api.pid
 
       - name: Wait for API to be up
-        # waits for backend server to respond before running Cypress
-        run: npx wait-on --timeout 60000 ${{ env.CYPRESS_BASE_URL }}
+        # use the base URL directly, no interpolation
+        run: npx wait-on --timeout 60000 http://127.0.0.1:8000
 
       - name: Run Cypress tests
         env:
