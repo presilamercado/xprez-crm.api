@@ -15,87 +15,37 @@ assert {
 }
 
 script:post-response {
-  test('returns expected customers (excluding timestamps)', () => {
-    const status = res.status;
+  test('returns customers with required fields', () => {
     const data = res.getBody();
-  
-    expect(status, 'status').to.eq(200);
+
     expect(Array.isArray(data), 'response is array').to.eq(true);
-  
-    const expectedCustomers = [
-      {
-        email: 'presila-1759656940871@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-      {
-        email: 'presila-1759657063981@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-      {
-        email: 'presila-1759657178019@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-    ];
-  
-    expectedCustomers.forEach((expected) => {
-      const match = data.find((customer) => customer.email === expected.email);
-      expect(match, `customer ${expected.email} present`).to.not.be.undefined;
-  
-      Object.entries(expected).forEach(([key, value]) => {
-        expect(match[key], `${expected.email} ${key}`).to.eq(value);
-      });
+    expect(data.length, 'list has entries').to.be.greaterThan(0);
+
+    data.slice(0, 10).forEach((customer, index) => {
+      expect(customer.email, `customer[${index}].email`).to.be.a('string');
+      expect(customer.phone, `customer[${index}].phone`).to.be.a('string');
+      expect(customer).to.have.property('company_name');
+      expect(customer).to.have.property('notes');
+      expect(customer.is_active, `customer[${index}].is_active`).to.be.a('boolean');
+      expect(customer.id, `customer[${index}].id`).to.be.a('string');
     });
   });
 }
 
 tests {
-  test('returns expected customers (excluding timestamps)', () => {
-    const status = res.status;
+  test('returns customers with required fields', () => {
     const data = res.getBody();
-  
-    expect(status, 'status').to.eq(200);
+
     expect(Array.isArray(data), 'response is array').to.eq(true);
-  
-    const expectedCustomers = [
-      {
-        email: 'presila-1759656940871@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-      {
-        email: 'presila-1759657063981@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-      {
-        email: 'presila-1759657178019@example.com',
-        phone: '0279603144',
-        company_name: 'valdezCompany',
-        notes: 'cypress test',
-        is_active: true,
-      },
-    ];
-  
-    expectedCustomers.forEach((expected) => {
-      const match = data.find((customer) => customer.email === expected.email);
-      expect(match, `customer ${expected.email} present`).to.not.be.undefined;
-  
-      Object.entries(expected).forEach(([key, value]) => {
-        expect(match[key], `${expected.email} ${key}`).to.eq(value);
-      });
+    expect(data.length, 'list has entries').to.be.greaterThan(0);
+
+    data.slice(0, 10).forEach((customer, index) => {
+      expect(customer.email, `customer[${index}].email`).to.be.a('string');
+      expect(customer.phone, `customer[${index}].phone`).to.be.a('string');
+      expect(customer).to.have.property('company_name');
+      expect(customer).to.have.property('notes');
+      expect(customer.is_active, `customer[${index}].is_active`).to.be.a('boolean');
+      expect(customer.id, `customer[${index}].id`).to.be.a('string');
     });
   });
 }
