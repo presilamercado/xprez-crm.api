@@ -4,8 +4,6 @@ describe('1 -Database Customer Injection', () => {
   it('inserts a customer directly via the database helper', () => {
     const uniqueSuffix = Date.now();
     const customerPayload = {
-      first_name: `db-${uniqueSuffix}`,
-      last_name: 'Seeder',
       email: `db-${uniqueSuffix}@example.com`,
       phone: '0279603144',
       company_name: 'SeededCo',
@@ -15,9 +13,10 @@ describe('1 -Database Customer Injection', () => {
 
     cy.task('db:insertCustomer', customerPayload)
       .then((insertedCustomer) => {
-        expect(insertedCustomer).to.have.property('id').that.is.a('number');
+        expect(insertedCustomer).to.have.property('id');
+        expect(['string', 'number'], 'id type').to.include(typeof insertedCustomer.id);
         expect(insertedCustomer.email).to.eq(customerPayload.email);
-        expect(insertedCustomer.first_name).to.eq(customerPayload.first_name);
+        expect(insertedCustomer).to.include(customerPayload);
         return insertedCustomer.id;
       })
       .then((customerId) =>

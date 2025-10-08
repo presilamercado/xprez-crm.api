@@ -1,4 +1,7 @@
 // cypress.config.js for Cypress v12+ (incl. v13)
+const path = require('path');
+const fs = require('fs');
+const { spawnSync } = require('child_process');
 const { defineConfig } = require('cypress');
 function resolvePythonBinary() {
   const scriptPath = path.join(__dirname, "scripts", "seed_customer.py");
@@ -51,10 +54,10 @@ function runSeedScript(customerPayload) {
   }
 }
 module.exports = defineConfig({
-  // If not overridden by env (CYPRESS_baseUrl), this default applies.
-  // You set CYPRESS_baseUrl in the workflow, so tests can just `cy.visit('/')`.
+  // If not overridden by env (CYPRESS_BASE_URL), this default applies.
+  // The GitHub workflow exports CYPRESS_BASE_URL so specs can simply `cy.visit('/')`.
   e2e: {
-    baseUrl: process.env.CYPRESS_baseUrl || 'http://127.0.0.1:8000',
+    baseUrl: process.env.CYPRESS_BASE_URL || 'http://127.0.0.1:8000',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/e2e.js',
     video: true,
@@ -69,7 +72,7 @@ module.exports = defineConfig({
       openMode: 0,
     },
     setupNodeEvents(on, config) {
-   on("task", {
+      on('task', {
         "db:insertCustomer": (customerPayload) => runSeedScript(customerPayload),
       });
 
