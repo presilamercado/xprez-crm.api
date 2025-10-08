@@ -1,6 +1,6 @@
 // http://localhost:8000/api/v1/docs#/api/v1/customers/
 
-describe('1 -Database Customer Injection', () => {
+describe('1 - Database Customer Injection', () => {
   it('inserts a customer directly via the database helper', () => {
     const uniqueSuffix = Date.now();
     const customerPayload = {
