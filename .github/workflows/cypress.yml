@@ -151,10 +151,11 @@ jobs:
           npx cypress run $EXTRA_ARGS
 
       - name: Run Bruno API tests
+        if: always()
         run: |
           set -euxo pipefail
           npm install -g @usebruno/cli
-
+          
           bru run --env CI --collection "bruno-api-xprez-crm/collection.bru"
           bru run --env CI --collection "bruno-api-xprez-crm/Get Customer.bru"
           bru run --env CI --collection "bruno-api-xprez-crm/List of Customer.bru"
