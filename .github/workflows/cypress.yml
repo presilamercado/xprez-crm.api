@@ -1,183 +1,213 @@
+# GitHub Actions workflow for running Cypress end-to-end tests and Bruno API tests
 name: Cypress CI
 
+# Trigger conditions: when this workflow should run
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]          # Run on every push to main branch
   pull_request:
-    branches: [ '*' ]
-  workflow_dispatch:
+    branches: [ '*' ]           # Run on pull requests to any branch
+  workflow_dispatch:            # Allow manual triggering from GitHub UI
 
+# Global environment variables available to all jobs
 env:
-  NODE_ENV: test
-  CYPRESS_BASE_URL: http://127.0.0.1:8000
-  DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/xprezideas_crm
-  NPM_CACHE_DIR: ~/.npm
+  NODE_ENV: test                                                                            # Set Node environment to test mode
+  CYPRESS_BASE_URL: http://127.0.0.1:8000                                                 # Base URL for Cypress tests to target
+  DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/xprezideas_crm     # Database connection string
+  NPM_CACHE_DIR: ~/.npm                                                                   # Directory for NPM cache
 
+# Concurrency control: prevent multiple instances of this workflow running simultaneously
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}    # Group by workflow name and git reference
+  cancel-in-progress: true                            # Cancel any running workflow when a new one starts
 
+# Default settings for all run commands
 defaults:
   run:
-    shell: bash
+    shell: bash    # Use bash shell for all commands (even on Windows runners)
 
 jobs:
+  # Main job for running end-to-end tests
   cypress-e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    # Use latest Ubuntu runner
 
+    # Database service: PostgreSQL container that runs alongside the job
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16    # Use PostgreSQL version 16
         env:
-          POSTGRES_DB: xprezideas_crm
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: xprezideas_crm     # Create database with this name
+          POSTGRES_USER: postgres         # Database user
+          POSTGRES_PASSWORD: postgres     # Database password
         ports:
-          - 5432:5432
+          - 5432:5432    # Map container port 5432 to host port 5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d xprezideas_crm"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "pg_isready -U postgres -d xprezideas_crm"    # Health check command
+          --health-interval 10s                                       # Check every 10 seconds
+          --health-timeout 5s                                         # Timeout after 5 seconds
+          --health-retries 5                                          # Retry 5 times before marking as unhealthy
 
+    # Job-specific environment variables
     env:
-      PIP_CACHE_DIR: ~/.cache/pip
+      PIP_CACHE_DIR: ~/.cache/pip    # Directory for Python pip cache
 
     steps:
+      # Step 1: Download the source code from the repository
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # Step 2: Restore NPM cache to speed up Node.js dependency installation
       - name: Restore npm cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.NPM_CACHE_DIR }}
-          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          path: ${{ env.NPM_CACHE_DIR }}                                        # Cache NPM packages
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}      # Cache key based on OS and package-lock.json hash
           restore-keys: |
-            npm-${{ runner.os }}-
+            npm-${{ runner.os }}-                                               # Fallback cache key if exact match not found
 
+      # Step 3: Restore Python pip cache to speed up Python dependency installation
       - name: Restore pip cache
         uses: actions/cache@v3
         with:
-          path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          path: ~/.cache/pip                                                                        # Cache pip packages
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}        # Cache key based on requirements files
           restore-keys: |
-            pip-${{ runner.os }}-
+            pip-${{ runner.os }}-                                                                   # Fallback cache key
 
+      # Step 4: Install and configure Python runtime
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.11'    # Use Python 3.11
 
+      # Step 5: Install and configure Node.js runtime
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.18.1'
+          node-version: '20.18.1'    # Use Node.js version 20.18.1
 
+      # Step 6: Install system-level packages needed for the application
       - name: Install system packages
         run: |
-          set -euxo pipefail
-          sudo apt-get update
+          set -euxo pipefail                                              # Bash strict mode: exit on error, undefined vars, pipe failures
+          sudo apt-get update                                             # Update package lists
           sudo apt-get install -y build-essential libpq-dev postgresql-client netcat-openbsd curl
-          sudo rm -rf /var/lib/apt/lists/*
+          # build-essential: C/C++ compilers for building Python packages
+          # libpq-dev: PostgreSQL development files
+          # postgresql-client: PostgreSQL client tools (psql, pg_isready)
+          # netcat-openbsd: Network utility for testing port connectivity
+          # curl: HTTP client for API health checks
+          sudo rm -rf /var/lib/apt/lists/*                               # Clean up package cache to reduce image size
 
+      # Step 7: Install Python dependencies from requirements.txt and pyproject.toml
       - name: Install Python dependencies
         run: |
           set -euxo pipefail
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ] ; then python -m pip install -r requirements.txt ; fi
-          if [ -f pyproject.toml ] ; then python -m pip install -e . ; fi
+          python -m pip install --upgrade pip                             # Upgrade pip to latest version
+          if [ -f requirements.txt ] ; then python -m pip install -r requirements.txt ; fi    # Install from requirements.txt if it exists
+          if [ -f pyproject.toml ] ; then python -m pip install -e . ; fi                     # Install project in editable mode if pyproject.toml exists
 
+      # Step 8: Install Node.js dependencies (npm ci is faster and more reliable than npm install for CI)
       - name: Install Node dependencies
-        run: npm ci
+        run: npm ci    # Clean install from package-lock.json (faster and deterministic for CI)
 
+      # Step 9: Wait for PostgreSQL database to be ready before proceeding
       - name: Wait for database
         run: |
           set -euxo pipefail
-          for i in {1..60}; do
-            if pg_isready -h localhost -p 5432 -U postgres -d xprezideas_crm; then
+          for i in {1..60}; do                                                              # Try up to 60 times (2 minutes)
+            if pg_isready -h localhost -p 5432 -U postgres -d xprezideas_crm; then        # Check if database accepts connections
               echo "Postgres is ready"
-              exit 0
+              exit 0                                                                       # Success - database is ready
             fi
-            sleep 2
+            sleep 2                                                                        # Wait 2 seconds between attempts
           done
-          echo "Database did not become ready in time" >&2
-          exit 1
+          echo "Database did not become ready in time" >&2                                # Error message to stderr
+          exit 1                                                                          # Fail the job if database never becomes ready
 
+      # Step 10: Start the FastAPI application in the background
       - name: Start API (background)
         env:
-          PYTHONPATH: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}    # Ensure Python can find the app module
         run: |
           set -euxo pipefail
-          # app lives in app/main.py and exposes "app"
+          # Start uvicorn server in background (&) and save process ID for later cleanup
           python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          echo $! > api.pid
+          echo $! > api.pid    # Save the background process ID to a file
 
+      # Step 11: Wait for the API server to start accepting connections
       - name: Wait for API port
         run: |
           set -euxo pipefail
-          # wait up to ~120s for TCP port 8000 to open
+          # Wait up to 120 seconds for TCP port 8000 to open
           for i in {1..120}; do
-            if nc -z 127.0.0.1 8000; then
+            if nc -z 127.0.0.1 8000; then         # Use netcat to check if port 8000 is open
               echo "Port 8000 is open"
-              exit 0
+              exit 0                               # Success - API is listening
             fi
-            sleep 1
+            sleep 1                                # Wait 1 second between attempts
           done
-          echo "Port 8000 did not open in time" >&2
-          exit 1
+          echo "Port 8000 did not open in time" >&2    # Error message
+          exit 1                                        # Fail the job if API never starts
 
+      # Step 12: Verify that the API is not just listening, but actually responding to requests
       - name: Health check (FastAPI docs)
         run: |
           set -euxo pipefail
-          for i in {1..60}; do
-            if curl --silent --fail "$CYPRESS_BASE_URL/api/v1/customers/" >/dev/null; then
+          for i in {1..60}; do                                                                     # Try for up to 2 minutes
+            if curl --silent --fail "$CYPRESS_BASE_URL/api/v1/customers/" >/dev/null; then       # Make HTTP request to customers endpoint
               echo "API responded successfully"
-              exit 0
+              exit 0                                                                               # Success - API is working
             fi
-            sleep 2
+            sleep 2                                                                                # Wait 2 seconds between attempts
           done
-          echo "API health check failed" >&2
+          echo "API health check failed" >&2                                                      # Error if API never responds
           exit 1
 
+      # Step 13: Run Cypress end-to-end tests
       - name: Run Cypress tests
         env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}    # Optional: for recording test results to Cypress Dashboard
         run: |
           set -euxo pipefail
           EXTRA_ARGS=""
-          if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then
-            EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"
+          if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then                 # If Cypress record key is available
+            EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"        # Add recording arguments
           fi
-          npx cypress run $EXTRA_ARGS
+          npx cypress run $EXTRA_ARGS                               # Run Cypress tests (headless mode for CI)
 
+      # Step 14: Run Bruno API tests (always run, even if Cypress tests fail)
       - name: Run Bruno API tests
-        if: always()
+        if: always()        # Run this step even if previous steps failed
         run: |
           set -euxo pipefail
-          npm install -g @usebruno/cli
-          pushd bruno-api-xprez-crm
-          bru run . -r --env testing
-          popd
+          npm install -g @usebruno/cli                             # Install Bruno CLI globally
+          pushd bruno-api-xprez-crm                                # Navigate to Bruno collection directory
+          bru run . -r --env testing                               # Run all Bruno tests in current directory with testing environment
+          popd                                                     # Return to previous directory
 
+      # Step 15: Upload Cypress screenshots if any tests failed (for debugging)
       - name: Upload screenshots (on failure)
-        if: failure()
+        if: failure()                           # Only run if any previous step failed
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
-          path: cypress/screenshots
-          if-no-files-found: ignore
+          name: cypress-screenshots             # Name for the uploaded artifact
+          path: cypress/screenshots             # Directory containing Cypress screenshots
+          if-no-files-found: ignore            # Don't fail if no screenshots exist
 
+      # Step 16: Upload Cypress videos if any tests failed (for debugging)
       - name: Upload videos (on failure)
-        if: failure()
+        if: failure()                           # Only run if any previous step failed
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-videos
-          path: cypress/videos
-          if-no-files-found: ignore
+          name: cypress-videos                  # Name for the uploaded artifact
+          path: cypress/videos                  # Directory containing Cypress videos
+          if-no-files-found: ignore            # Don't fail if no videos exist
 
+      # Step 17: Clean up - stop the FastAPI server process
       - name: Stop API process
-        if: always()
+        if: always()                            # Always run this step (cleanup) regardless of success/failure
         run: |
-          if [ -f api.pid ]; then
-            kill "$(cat api.pid)" || true
+          if [ -f api.pid ]; then              # Check if process ID file exists
+            kill "$(cat api.pid)" || true     # Kill the API process, ignore errors if process already stopped
           fi
