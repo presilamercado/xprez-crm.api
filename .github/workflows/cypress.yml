@@ -9,13 +9,17 @@ on:
 
 env:
   NODE_ENV: test
-  # define base URL directly here (no need to reuse env vars)
   CYPRESS_baseUrl: http://127.0.0.1:8000
   NPM_CACHE_DIR: ~/.npm
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# ensure all `run:` steps use bash (supports `set -euxo pipefail`)
+defaults:
+  run:
+    shell: bash
 
 jobs:
   cypress-e2e:
@@ -42,7 +46,7 @@ jobs:
             npm-${{ runner.os }}-
 
       - name: Point npm to cache dir
-        run: npm config set cache $NPM_CACHE_DIR --global
+        run: npm config set cache "$NPM_CACHE_DIR" --global
 
       - name: Restore pip cache
         uses: actions/cache@v3
@@ -81,7 +85,6 @@ jobs:
           echo $! > api.pid
 
       - name: Wait for API to be up
-        # use the base URL directly, no interpolation
         run: npx wait-on --timeout 60000 http://127.0.0.1:8000
 
       - name: Run Cypress tests
