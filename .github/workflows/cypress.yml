@@ -206,7 +206,7 @@ jobs:
 
       # Step 17: Clean up - stop the FastAPI server process
       - name: Stop API process
-        if: always()                            # Always run this step (cleanup) regardless of success/failure
+        if: always()                            #  Always run this step (cleanup) regardless of success/failure
         run: |
           if [ -f api.pid ]; then              # Check if process ID file exists
             kill "$(cat api.pid)" || true     # Kill the API process, ignore errors if process already stopped
