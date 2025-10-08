@@ -1,0 +1,121 @@
+name: Cypress CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+  # optional: lets you run manually from GitHub Actions tab
+  workflow_dispatch:
+
+env:
+  NODE_ENV: test
+  CYPRESS_BASE_URL: http://127.0.0.1:8000
+  NPM_CACHE_DIR: ~/.npm
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cypress-e2e:
+    runs-on: ubuntu-latest
+
+    container:
+      image: cypress/included:13.7.1
+      options: --user 0:0
+
+    env:
+      # ✅ Cypress expects this camelCase variable name
+      CYPRESS_baseUrl: ${{ env.CYPRESS_BASE_URL }}
+      PYTHON: .venv/bin/python
+      PIP_CACHE_DIR: ~/.cache/pip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore npm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.NPM_CACHE_DIR }}
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: Point npm to cache dir
+        run: npm config set cache $NPM_CACHE_DIR --global
+
+      - name: Restore pip cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install system packages
+        run: |
+          set -euxo pipefail
+          apt-get update
+          apt-get install -y python3 python3-venv python3-dev build-essential netcat-openbsd
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Set up Python virtualenv
+        run: |
+          set -euxo pipefail
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Start API (background)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euxo pipefail
+          . .venv/bin/activate
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          echo $! > api.pid
+
+      - name: Wait for API to be up
+        # waits for backend server to respond before running Cypress
+        run: npx wait-on --timeout 60000 ${{ env.CYPRESS_BASE_URL }}
+
+      - name: Run Cypress tests
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+        run: |
+          set -euxo pipefail
+          EXTRA_ARGS=""
+          if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then
+            EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"
+          fi
+          npx cypress run --browser chrome $EXTRA_ARGS
+
+      - name: Upload screenshots (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload videos (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          if-no-files-found: ignore
+
+      - name: Stop API process
+        if: always()
+        run: |
+          if [ -f api.pid ]; then
+            kill "$(cat api.pid)" || true
+          fi
