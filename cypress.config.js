@@ -67,6 +67,7 @@ module.exports = defineConfig({
     defaultCommandTimeout: 10000,
     requestTimeout: 15000,
     responseTimeout: 30000,
+    projectId: "uchy87",
     retries: {
       runMode: 1,
       openMode: 0,
@@ -80,3 +81,8 @@ module.exports = defineConfig({
     },
   },
 });
+
+
+// npx cypress run --record --key af058352-2b33-4891-8202-d042fe035326
+
+// CYPRESS_RECORD_KEY : af058352-2b33-4891-8202-d042fe035326
