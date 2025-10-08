@@ -155,7 +155,9 @@ jobs:
         run: |
           set -euxo pipefail
           npm install -g @usebruno/cli
-          bru run "bruno-api-xprez-crm/collection.bru" --env CI
+          pushd bruno-api-xprez-crm
+          bru run . -r --env CI
+          popd
 
       - name: Upload screenshots (on failure)
         if: failure()
