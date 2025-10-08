@@ -9,6 +9,8 @@ on:
 
 env:
   NODE_ENV: test
+  # Set both—Cypress reads the camelCase one; your curl uses the ALLCAPS one.
+  CYPRESS_baseUrl: http://127.0.0.1:8000
   CYPRESS_BASE_URL: http://127.0.0.1:8000
   NPM_CACHE_DIR: ~/.npm
 
@@ -16,7 +18,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ensure all `run:` steps use bash (supports `set -euxo pipefail`)
+# ensure all `run:` steps use bash (so `set -euxo pipefail` works)
 defaults:
   run:
     shell: bash
@@ -27,7 +29,8 @@ jobs:
 
     env:
       PIP_CACHE_DIR: ~/.cache/pip
-      BASE_URL: ${{ env.CYPRESS_BASE_URL }}
+      # remove this (caused the parse error)
+      # BASE_URL: ${{ env.CYPRESS_BASE_URL }}
 
     steps:
       - name: Check out repository
@@ -91,7 +94,7 @@ jobs:
         run: |
           set -euxo pipefail
           for i in {1..30}; do
-            if curl --silent --fail $CYPRESS_BASE_URL/api/v1/customers/ >/dev/null; then
+            if curl --silent --fail "$CYPRESS_BASE_URL/api/v1/customers/" >/dev/null; then
               exit 0
             fi
             sleep 2
@@ -108,6 +111,7 @@ jobs:
           if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then
             EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"
           fi
+          # add --browser chrome --headless if you prefer
           npx cypress run $EXTRA_ARGS
 
       - name: Upload screenshots (on failure)
