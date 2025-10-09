@@ -67,7 +67,7 @@ module.exports = defineConfig({
     defaultCommandTimeout: 10000,
     requestTimeout: 15000,
     responseTimeout: 30000,
-    projectId: "a5bpri",
+    projectId: "u59zc6",
     retries: {
       runMode: 1,
       openMode: 0,
@@ -84,6 +84,10 @@ module.exports = defineConfig({
 
 // npx cypress run --record --key c7a4fd43-f6be-4c9f-949b-756410d42313
 // CYPRESS_RECORD_KEY : c7a4fd43-f6be-4c9f-949b-756410d42313
+
+//presila - npx cypress run --record --key 00fa07f2-b0fc-494b-86e0-e41ada10776a
+
+//00fa07f2-b0fc-494b-86e0-e41ada10776a
 
 
 
