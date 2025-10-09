@@ -1,0 +1,24 @@
+meta {
+  name: GET CUSTOMER without script 404
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/12f090f5-741e-48e4-87e6-7eeb07b43ac2
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("Get Customer", () => {
+    const data = res.getBody();
+  
+    expect(data.detail).to.equal("Customer not found");
+  });
+  
+}
