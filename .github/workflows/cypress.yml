@@ -175,7 +175,7 @@ jobs:
             npx cypress run \
               --record \
               --key "$CYPRESS_RECORD_KEY" \
-              --run-name "${GITHUB_WORKFLOW} • ${GITHUB_REF_NAME} #${GITHUB_RUN_NUMBER}" \
+              --group "${GITHUB_WORKFLOW} • ${GITHUB_REF_NAME}" \
               --tag "${GITHUB_REF_NAME}" \
               --ci-build-id "${GITHUB_RUN_ID}"
           else
