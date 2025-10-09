@@ -164,17 +164,16 @@ jobs:
           echo "API health check failed" >&2                                                      # Error if API never responds
           exit 1
 
-      # Step 13: Run Cypress end-to-end tests
+      # Step 13: Run Cypress end-to-end tests using official Cypress GitHub action
       - name: Run Cypress tests
+        uses: cypress-io/github-action@v6    # Official Cypress action
+        with:
+          wait-on: 'http://127.0.0.1:8000/api/v1/health'    # Wait for API health endpoint (API already started in previous step)
+          wait-on-timeout: 120                               # Wait up to 2 minutes for API to be ready
+          record: ${{ secrets.CYPRESS_RECORD_KEY != '' }}    # Record to Cypress Dashboard if key is available
+          key: ${{ secrets.CYPRESS_RECORD_KEY }}             # Cypress Dashboard recording key
         env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}    # Optional: for recording test results to Cypress Dashboard
-        run: |
-          set -euxo pipefail
-          EXTRA_ARGS=""
-          if [ -n "${CYPRESS_RECORD_KEY:-}" ]; then                 # If Cypress record key is available
-            EXTRA_ARGS="--record --key $CYPRESS_RECORD_KEY"        # Add recording arguments
-          fi
-          npx cypress run $EXTRA_ARGS                               # Run Cypress tests (headless mode for CI)
+          CYPRESS_BASE_URL: ${{ env.CYPRESS_BASE_URL }}      # Pass base URL to Cypress tests
 
       # Step 14: Run Bruno API tests (always run, even if Cypress tests fail)
       - name: Run Bruno API tests
