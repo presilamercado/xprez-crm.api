@@ -166,12 +166,9 @@ jobs:
 
       # Step 13: Run Cypress end-to-end tests using official Cypress GitHub action
       - name: Run Cypress tests
-        uses: cypress-io/github-action@v6    # Official Cypress action
-        with:
-          wait-on: 'http://127.0.0.1:8000/api/v1/health'    # Wait for API health endpoint (API already started in previous step)
-          wait-on-timeout: 120                               # Wait up to 2 minutes for API to be ready
-          record: ${{ secrets.CYPRESS_RECORD_KEY != '' }}    # Record to Cypress Dashboard if key is available
-          key: ${{ secrets.CYPRESS_RECORD_KEY }}             # Cypress Dashboard recording key
+        run: |
+          set -euxo pipefail
+          npx cypress run
         env:
           CYPRESS_BASE_URL: ${{ env.CYPRESS_BASE_URL }}      # Pass base URL to Cypress tests
 
