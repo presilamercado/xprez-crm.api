@@ -1,5 +1,5 @@
 describe('API Test - Verify transportId value', () => {
-  it.skip('should fail if transportId does not match DE1K900002', () => {
+  it('should fail if transportId does not match DE1K900002', () => {
     cy.api({
       url: 'https://68a6b3d1639c6a54e99f8c13.mockapi.io/api/v1/external_system/transport/1',
       method: 'GET',
@@ -13,15 +13,3 @@ describe('API Test - Verify transportId value', () => {
   });
 });
 
-
-
-
-
-
-
-
-
-
-
-
-// test f/branch
